@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>One minute changes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="css/normalize.css">
+  <link rel="stylesheet" href="css/skeleton.css">
+  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highcharts/4.0.4/highcharts.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="row">
+      <div class="ten columns offset-by-one" style="margin-top: 20%">
+        <div id="highcharts"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+  $(function() {
+    function createHighchartsSeries(chordChangeData) {
+      // From the data, create an object that maps a chord change to an array
+      // of [date, changes] arrays.
+      var chordChangeMap = {};
+      $.each(chordChangeData, function(index, change) {
+        // Convert the ISO 8601 date into milliseconds since epoch.
+        var date = new Date(change[0]);
+        // Normalise the chord change by sorting.
+        var sortedChordChange = change[1].sort();
+        var chordChange = sortedChordChange[0] + ' → ' + sortedChordChange[1];
+        chordChangeMap[chordChange] = chordChangeMap[chordChange] || {data: []};
+        chordChangeMap[chordChange].data.push([date.getTime(), change[2]]);
+      });
+      // Convert the chord change map into a Highcharts-compatible series
+      // array.
+      var series = [];
+      $.each(chordChangeMap, function(key, value) {
+        series.push({name: key, data: value.data});
+      });
+      console.log(series);
+      return series;
+    };
+
+    $.getJSON(
+      'https://gist.githubusercontent.com/eidorb/a7fee91a09762918df93/raw/changes.json',
+      function(data) {
+        $('#highcharts').highcharts({
+          chart: {type: 'line'},
+          title: {text: 'One minute chord changes'},
+          xAxis: {
+            type: 'datetime',
+            title: {
+              text: 'Date'
+            }
+          },
+          yAxis: {
+            title: {text: 'Changes in one minute'}
+          },
+          series: createHighchartsSeries(data)
+        });
+      }
+    );
+  });
+  </script>
+</body>
+</html>
